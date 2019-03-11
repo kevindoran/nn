@@ -24,14 +24,23 @@ endif()
 # 3rd-party
 set(3RD_PARTY_DIR ${PROJECT_SOURCE_DIR}/3rdparty)
 
+# MNIST Reader
+# Instead of using the 'PATHS {3RD_PARTY_DIR}' option which hints to add the
+# 3rd party directory to the search path, we could instead just set the
+# variable: set(MNIST_DIR ${3RD_PARTY_DIR}/mnist). <package_DIR> is a variable
+# used by find_package.
+#find_package(MNIST REQUIRED PATHS ${3RD_PARTY_DIR})
+set(MNIST_DIR ${3RD_PARTY_DIR}/mnist)
+find_package(MNIST REQUIRED)
+
 # The recommendation against GLOB describes the issue whereby adding a
 # new file will not instruct the build system that a project has changed.
 # However, seeing as this is a 1-person project and Clion is being used, this
 # issue doesn't seem relevant. So let's use GLOB until this situation changes.
 
 # Library
-file(GLOB_RECURSE source_list "${PROJECT_SOURCE_DIR}/*.cpp"
-                              "${PROJECT_SOURCE_DIR}.hpp")
+file(GLOB_RECURSE source_list "${PROJECT_SOURCE_DIR}/src/*.cpp"
+                              "${PROJECT_SOURCE_DIR}/src/.hpp")
 add_library(${project_name} ${source_list})
 target_include_directories(${project_name}
                            PUBLIC
@@ -46,9 +55,10 @@ add_executable(runTests ${test_source_list})
 target_link_libraries(runTests gtest gtest_main)
 target_link_libraries(runTests ${CONAN_LIBS})
 target_link_libraries(runTests ${project_name})
-target_include_directories(runTests
-                           PRIVATE
-                           ${project_test_dir}/common)
+target_include_directories(runTests PRIVATE ${project_test_dir}/common)
+## MNIST dependency. As per the example project in mnist/example/CmakeLists.txt.
+target_include_directories(runTests PRIVATE ${MNIST_INCLUDE_DIR})
+target_compile_definitions(runTests PRIVATE MNIST_DATA_LOCATION="${MNIST_DATA_DIR}")
 enable_testing()
 # Add a test to the project to be run by ctest
 #add_test(<name> <executable>)
